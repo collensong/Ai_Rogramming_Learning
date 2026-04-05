@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 2 - AI 语音助手</title>
+    <style>
+        /* ... 你的CSS样式保持不变 ... */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --bg-color: #F5F5F5; --card-bg: #FFFFFF; --primary: #4A89DC; --secondary: #48CFAD; --text-primary: #333333; --text-secondary: #666666; --user-msg-bg: #E3F2FD; --shadow: 0 2px 8px rgba(0,0,0,0.08); --radius: 16px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: var(--bg-color); color: var(--text-primary); height: 100vh; overflow: hidden; display: flex; }
+        .sidebar { width: 280px; background: var(--card-bg); box-shadow: 2px 0 8px rgba(0,0,0,0.05); transform: translateX(-100%); transition: transform 0.3s ease; position: absolute; left: 0; top: 0; height: 100%; z-index: 100; display: flex; flex-direction: column; }
+        .sidebar.open { transform: translateX(0); }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-content { flex: 1; overflow-y: auto; padding: 16px; }
+        .note-card { background: var(--bg-color); border-radius: 12px; padding: 16px; margin-bottom: 12px; cursor: pointer; transition: all 0.2s; position: relative; }
+        .note-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+        .note-title { font-weight: 600; margin-bottom: 8px; color: var(--text-primary); }
+        .note-preview { font-size: 14px; color: var(--text-secondary); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .note-time { font-size: 12px; color: #999; margin-top: 8px; }
+        .main-container { flex: 1; display: flex; flex-direction: column; max-width: 800px; margin: 0 auto; width: 100%; height: 100%; position: relative; }
+        .header { background: var(--card-bg); padding: 16px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+        .header-title { font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .header-icons { display: flex; gap: 16px; }
+        .icon-btn { width: 40px; height: 40px; border-radius: 50%; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; font-size: 20px; }
+        .icon-btn:hover { background: var(--bg-color); }
+        .chat-container { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; scroll-behavior: smooth; }
+        .message { max-width: 70%; padding: 16px 20px; border-radius: var(--radius); font-size: 15px; line-height: 1.5; animation: fadeIn 0.3s ease; position: relative; word-wrap: break-word; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .message.user { align-self: flex-end; background: var(--user-msg-bg); color: var(--text-primary); border-bottom-right-radius: 4px; }
+        .message.ai { align-self: flex-start; background: var(--card-bg); box-shadow: var(--shadow); border-bottom-left-radius: 4px; }
+        .message-time { font-size: 11px; color: #999; margin-top: 6px; opacity: 0.8; }
+        .input-area { background: var(--card-bg); padding: 16px 24px; box-shadow: 0 -1px 3px rgba(0,0,0,0.05); display: flex; gap: 12px; align-items: center; }
+        .input-wrapper { flex: 1; position: relative; }
+        .text-input { width: 100%; padding: 12px 16px; border: 1px solid #e0e0e0; border-radius: 24px; font-size: 15px; outline: none; transition: border-color 0.2s; font-family: inherit; }
+        .text-input:focus { border-color: var(--primary); }
+        .mic-btn { width: 48px; height: 48px; border-radius: 50%; border: none; background: var(--primary); color: white; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: 0 2px 8px rgba(74, 137, 220, 0.3); }
+        .mic-btn:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(74, 137, 220, 0.4); }
+        .mic-btn:active { transform: scale(0.95); }
+        .mic-btn.recording { background: #ff4444; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(255, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); } }
+        .send-btn { width: 40px; height: 40px; border-radius: 50%; border: none; background: var(--secondary); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); opacity: 0; visibility: hidden; transition: all 0.3s; z-index: 50; }
+        .overlay.show { opacity: 1; visibility: visible; }
+        @media (max-width: 768px) { .sidebar { width: 100%; } .message { max-width: 85%; } }
+        .recording-hint { position: absolute; top: -40px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 8px 16px; border-radius: 20px; font-size: 14px; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+        .recording-hint.show { opacity: 1; }
+    </style>
+</head>
+<body>
+
+    <!-- 侧边栏 - 留言板 -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3>📝 留言板</h3>
+            <button class="icon-btn" onclick="toggleSidebar()">✕</button>
+        </div>
+        <div class="sidebar-content" id="noteList">
+            <div class="note-card" onclick="loadNote(1)">
+                <div class="note-title">测试用户1</div>
+                <div class="note-preview">hello word! ~</div>
+                <div class="note-time">刚刚</div>
+            </div>
+            <div class="note-card" onclick="loadNote(2)">
+                <div class="note-title">测试用户2</div>
+                <div class="note-preview">这是另一条留言内容...</div>
+                <div class="note-time">5分钟前</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    <!-- 主界面 -->
+    <div class="main-container">
+        <div class="header">
+            <button class="icon-btn" onclick="toggleSidebar()">☰</button>
+            <div class="header-title">
+                <span>🎙️</span>
+                <span>AI 语音助手</span>
+            </div>
+            <div class="header-icons">
+                <button class="icon-btn" onclick="clearChat()" title="清空对话">🗑️</button>
+                <button class="icon-btn" title="设置">⚙️</button>
+            </div>
+        </div>
+
+        <!-- 对话区域 -->
+        <div class="chat-container" id="chatContainer">
+            <div class="message ai">
+                你好！我是 AI 语音助手。点击麦克风按钮说话，或者输入文字与我交流。
+                <div class="message-time">刚刚</div>
+            </div>
+        </div>
+
+        <!-- 底部输入区 -->
+        <div class="input-area">
+            <div class="input-wrapper">
+                <input type="text" class="text-input" id="textInput" 
+                       placeholder="输入消息..." 
+                       onkeypress="if(event.key==='Enter')sendText()">
+                <div class="recording-hint" id="recordingHint">正在录音...</div>
+            </div>
+            
+            <!-- 🎯 关键修改：去掉内联事件，改用JS绑定 -->
+            <button class="mic-btn" id="micBtn">🎤</button>
+            
+            <button class="send-btn" onclick="sendText()">➤</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8002';
+        
+        // 🎯 新增：全局变量（从第一段代码）
+        let mediaRecorder;
+        let audioChunks = [];
+        let audioContext;
+
+        // 切换侧边栏
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('overlay').classList.toggle('show');
+        }
+
+        // 添加消息到对话
+        function addMessage(text, isUser = false) {
+            const container = document.getElementById('chatContainer');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${isUser ? 'user' : 'ai'}`;
+            
+            const time = new Date().toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit'});
+            msgDiv.innerHTML = `
+                ${text}
+                <div class="message-time">${time}</div>
+            `;
+            
+            container.appendChild(msgDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // 发送文字
+        function sendText() {
+            const input = document.getElementById('textInput');
+            const text = input.value.trim();
+            if (!text) return;
+            
+            addMessage(text, true);
+            input.value = '';
+            
+            // 模拟 AI 回复
+            setTimeout(() => {
+                addMessage('我收到了你的消息：' + text + '（后续接入 AI 回复）');
+            }, 500);
+        }
+
+        // 清空对话
+        function clearChat() {
+            if (confirm('确定要清空所有对话吗？')) {
+                document.getElementById('chatContainer').innerHTML = '';
+            }
+        }
+
+        // 🎯 替换为新版：开始录音（16kHz采样 + 格式检查）
+        async function startRecord() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        sampleRate: 16000,  // 强制 16kHz
+                        channelCount: 1,    // 单声道
+                        echoCancellation: true,
+                        noiseSuppression: true
+                    } 
+                });
+                
+                // 检查支持的 MIME 类型
+                const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
+                    ? 'audio/webm;codecs=opus' 
+                    : 'audio/webm';
+                    
+                mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: mimeType,
+                    audioBitsPerSecond: 16000
+                });
+                
+                audioChunks = [];
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                        console.log('收到数据块:', event.data.size, 'bytes, type:', event.data.type);
+                    }
+                };
+                
+                // 不指定切片时间，让浏览器自动处理（保证文件头完整）
+                mediaRecorder.start();
+                
+                document.getElementById('micBtn').classList.add('recording');
+                document.getElementById('recordingHint').classList.add('show');
+                
+            } catch (err) {
+                alert('无法访问麦克风: ' + err.message);
+                console.error(err);
+            }
+        }
+
+        // 🎯 替换为新版：停止录音（Promise + 音频检查）
+        async function stopRecord() {
+            if (!mediaRecorder || mediaRecorder.state === 'inactive') return;
+            
+            return new Promise((resolve) => {
+                mediaRecorder.onstop = async () => {
+                    console.log('录音停止，收集到', audioChunks.length, '个数据块');
+                    
+                    if (audioChunks.length === 0) {
+                        alert('录音失败：没有收集到音频数据');
+                        resolve();
+                        return;
+                    }
+                    
+                    // 🔍 调试：检查第一个数据块的内容
+                    const firstChunk = audioChunks[0];
+                    console.log('第一个数据块大小:', firstChunk.size, '类型:', firstChunk.type);
+                    
+                    // 读取前4个字节检查文件头
+                    const reader = new FileReader();
+                    reader.onloadend = function() {
+                        const arr = new Uint8Array(reader.result);
+                        const hex = Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join(' ');
+                        console.log('第一个数据块前4字节 (hex):', hex);
+                        console.log('期望的 WebM 头: 1a 45 df a3');
+                    };
+                    reader.readAsArrayBuffer(firstChunk.slice(0, 4));
+                    
+                    // 使用实际录制的 MIME 类型创建 Blob
+                    const actualMimeType = mediaRecorder.mimeType || 'audio/webm';
+                    const audioBlob = new Blob(audioChunks, { type: actualMimeType });
+                    console.log('创建 Blob, MIME类型:', actualMimeType, '大小:', audioBlob.size);
+                    
+                    if (audioBlob.size < 1000) {
+                        alert('录音太短或无声');
+                        resolve();
+                        return;
+                    }
+                    
+                    // 🔍 调试：检查 Blob 的内容
+                    const blobReader = new FileReader();
+                    blobReader.onloadend = function() {
+                        const arr = new Uint8Array(blobReader.result);
+                        const hex = Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join(' ');
+                        console.log('Blob 前4字节 (hex):', hex);
+                    };
+                    blobReader.readAsArrayBuffer(audioBlob.slice(0, 4));
+                    
+                    await uploadAudio(audioBlob);
+                    resolve();
+                };
+                
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                
+                document.getElementById('micBtn').classList.remove('recording');
+                document.getElementById('recordingHint').classList.remove('show');
+            });
+        }
+
+        // 🎯 新增：上传音频（独立函数，方便维护）
+        async function uploadAudio(audioBlob) {
+            addMessage('🎤 识别中...', true);
+            
+            const formData = new FormData();
+            formData.append('file', audioBlob, 'recording.webm');
+            
+            try {
+                const res = await fetch('http://localhost:8002/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await res.json();
+                
+                // 更新"识别中"消息为结果
+                const msgs = document.querySelectorAll('.message.user');
+                const lastMsg = msgs[msgs.length - 1];
+                
+                if (data.text) {
+                    // 显示识别的文字
+                    lastMsg.innerHTML = '🎤 ' + data.text + '<div class="message-time">刚刚</div>';
+                    
+                    // 显示 AI 回复（后端已调用 DeepSeek）
+                    if (data.reply) {
+                        addMessage(data.reply, false);
+                    }
+                    
+                    // 播放 AI 回复的语音
+                    if (data.audio_url) {
+                        const audio = new Audio('http://localhost:8002' + data.audio_url);
+                        audio.play().catch(e => console.log('自动播放被阻止:', e));
+                    }
+                } else {
+                    lastMsg.innerHTML = '[识别失败] ' + (data.error || '请重试') + '<div class="message-time">刚刚</div>';
+                }
+                
+            } catch (err) {
+                console.error('上传失败:', err);
+                addMessage('❌ 网络错误: ' + err.message, true);
+            }
+        }
+
+        // 🎯 新增：获取 AI 回复
+        async function getAIResponse(text) {
+            addMessage('🤔 思考中...', false);
+            
+            // 这里替换为真实AI API调用
+            // const res = await fetch('/chat', {...});
+            
+            // 模拟回复
+            setTimeout(() => {
+                const msgs = document.querySelectorAll('.message.ai');
+                const lastMsg = msgs[msgs.length - 1];
+                lastMsg.innerHTML = '我听到了: "' + text + '"<div class="message-time">刚刚</div>';
+            }, 500);
+        }
+
+        // 加载留言
+        async function loadNotes() {
+            try {
+                const res = await fetch('http://localhost:8001/messages');
+                const data = await res.json();
+                // 渲染到侧边栏...
+            } catch (e) {
+                console.log('Day1 后端未启动，使用示例数据');
+            }
+        }
+
+        // 🎯 关键修改：在JS中绑定事件（更可靠，避免HTML内联事件问题）
+        const micBtn = document.getElementById('micBtn');
+        
+        // 鼠标事件
+        micBtn.addEventListener('mousedown', startRecord);
+        micBtn.addEventListener('mouseup', stopRecord);
+        
+        // 触摸事件（移动端）
+        micBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // 防止触摸时触发鼠标事件
+            startRecord();
+        });
+        micBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            stopRecord();
+        });
+
+        // 初始化
+        loadNotes();
+    </script>
+</body>
+</html>

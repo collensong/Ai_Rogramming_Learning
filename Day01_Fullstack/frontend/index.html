@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>留言板</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #ffffff;
+            min-height: 100vh;
+            padding-top: 60px;
+        }
+
+        /* 导航栏 */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .navbar h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* 内容区 */
+        .content {
+            padding: 20px 0;
+            min-height: calc(100vh - 60px);
+        }
+
+        /* 留言卡片 */
+        .message-card {
+            width: 90%;
+            margin: 0 auto 20px;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            transition: box-shadow 0.3s ease;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .message-card:hover {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .username {
+            color: #333333;
+            font-size: 16px;
+            font-weight: 600;
+            text-align: left;
+        }
+
+        .message-content {
+            color: #000000;
+            font-size: 15px;
+            line-height: 1.5;
+            margin-bottom: 12px;
+            word-wrap: break-word;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .timestamp {
+            color: #999999;
+            font-size: 13px;
+            text-align: right;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 12px;
+        }
+
+        .edit-btn, .delete-btn {
+            font-size: 13px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .edit-btn {
+            color: #1890ff;
+        }
+
+        .edit-btn:hover {
+            background: #e6f7ff;
+        }
+
+        .delete-btn {
+            color: #ff4d4f;
+        }
+
+        .delete-btn:hover {
+            background: #fff1f0;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        /* 悬浮发布按钮 */
+        .fab {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            width: 56px;
+            height: 56px;
+            background: #1890ff;
+            border-radius: 50%;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(24, 144, 255, 0.4);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 99;
+        }
+
+        .fab:hover {
+            box-shadow: 0 6px 16px rgba(24, 144, 255, 0.5);
+        }
+
+        .fab:active {
+            transform: scale(0.9);
+        }
+
+        /* 模态窗口遮罩 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        /* 模态窗口 */
+        .modal {
+            background: white;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 16px;
+            padding: 24px;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            margin-bottom: 12px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .modal-input:focus {
+            border-color: #1890ff;
+        }
+
+        .modal-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            min-height: 100px;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s;
+            margin-bottom: 20px;
+            font-family: inherit;
+        }
+
+        .modal-textarea:focus {
+            border-color: #1890ff;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .modal-btn-cancel {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .modal-btn-cancel:hover {
+            background: #e8e8e8;
+        }
+
+        .modal-btn-submit {
+            background: #1890ff;
+            color: white;
+        }
+
+        .modal-btn-submit:hover {
+            background: #40a9ff;
+        }
+
+        /* 状态提示 */
+        .toast {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 300;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.error {
+            background: #ff4d4f;
+        }
+
+        .toast.success {
+            background: #52c41a;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <h1>留言板</h1>
+    </nav>
+
+    <!-- 内容区 -->
+    <div class="content" id="messageList">
+        <div class="empty-state">加载中...</div>
+    </div>
+
+    <!-- 悬浮发布按钮 -->
+    <button class="fab" onclick="openModal()">+</button>
+
+    <!-- 模态窗口 -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModalOnOverlay(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header" id="modalTitle">发布留言</div>
+            <input type="hidden" id="editId">
+            <input type="text" class="modal-input" id="nameInput" placeholder="你的名字" maxlength="20">
+            <textarea class="modal-textarea" id="contentInput" placeholder="说点什么..." maxlength="500"></textarea>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-cancel" onclick="closeModal()">取消</button>
+                <button class="modal-btn modal-btn-submit" id="submitBtn" onclick="submitMessage()">发布</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 提示消息 -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const API_URL = 'http://localhost:8001';
+
+        // 格式化时间
+        function formatTime(dateStr) {
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diff = Math.floor((now - date) / 1000);
+            
+            if (diff < 60) return '刚刚';
+            if (diff < 3600) return Math.floor(diff / 60) + '分钟前';
+            if (diff < 86400) return Math.floor(diff / 3600) + '小时前';
+            if (diff < 604800) return Math.floor(diff / 86400) + '天前';
+            return date.toLocaleDateString();
+        }
+
+        // 显示提示
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type;
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // 加载留言
+        async function loadMessages() {
+            try {
+                const response = await fetch(`${API_URL}/messages`);
+                const data = await response.json();
+                
+                const listDiv = document.getElementById('messageList');
+                if (data.length === 0) {
+                    listDiv.innerHTML = '<div class="empty-state">还没有留言，快来抢沙发！</div>';
+                } else {
+                    listDiv.innerHTML = data.map((m) => `
+                        <div class="message-card">
+                            <div class="card-header">
+                                <span class="username">${escapeHtml(m.name)}</span>
+                            </div>
+                            <div class="message-content">${escapeHtml(m.content)}</div>
+                            <div class="card-footer">
+                                <div class="action-btns">
+                                    <span class="edit-btn" onclick="editMessage(${m.id}, '${escapeHtml(m.name)}', '${escapeHtml(m.content)}')">编辑</span>
+                                    <span class="delete-btn" onclick="deleteMessage(${m.id})">删除</span>
+                                </div>
+                                <span class="timestamp">${formatTime(m.created_at || new Date())}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                document.getElementById('messageList').innerHTML = 
+                    '<div class="empty-state">加载失败，请检查后端服务</div>';
+                console.error('加载失败:', error);
+            }
+        }
+
+        // 转义 HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 打开模态窗口
+        function openModal() {
+            document.getElementById('modalTitle').textContent = '发布留言';
+            document.getElementById('submitBtn').textContent = '发布';
+            document.getElementById('editId').value = '';
+            document.getElementById('nameInput').value = '';
+            document.getElementById('contentInput').value = '';
+            document.getElementById('modalOverlay').classList.add('active');
+            document.getElementById('nameInput').focus();
+        }
+
+        // 编辑留言
+        function editMessage(id, name, content) {
+            document.getElementById('modalTitle').textContent = '编辑留言';
+            document.getElementById('submitBtn').textContent = '保存';
+            document.getElementById('editId').value = id;
+            document.getElementById('nameInput').value = name;
+            document.getElementById('contentInput').value = content;
+            document.getElementById('modalOverlay').classList.add('active');
+            document.getElementById('contentInput').focus();
+        }
+
+        // 关闭模态窗口
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+            document.getElementById('nameInput').value = '';
+            document.getElementById('contentInput').value = '';
+            document.getElementById('editId').value = '';
+        }
+
+        // 点击遮罩关闭
+        function closeModalOnOverlay(event) {
+            if (event.target === event.currentTarget) {
+                closeModal();
+            }
+        }
+
+        // 提交留言（新建或编辑）
+        async function submitMessage() {
+            const name = document.getElementById('nameInput').value.trim();
+            const content = document.getElementById('contentInput').value.trim();
+            const editId = document.getElementById('editId').value;
+            
+            if (!name || !content) {
+                showToast('请填写名字和内容', 'error');
+                return;
+            }
+            
+            try {
+                let response, result;
+                
+                if (editId) {
+                    // 编辑模式
+                    response = await fetch(`${API_URL}/messages/${editId}`, {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({name, content})
+                    });
+                    result = await response.json();
+                    
+                    if (result.status === 'ok') {
+                        showToast('保存成功！');
+                        closeModal();
+                        loadMessages();
+                    } else {
+                        showToast(result.message || '保存失败', 'error');
+                    }
+                } else {
+                    // 新建模式
+                    response = await fetch(`${API_URL}/submit`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({name, content})
+                    });
+                    result = await response.json();
+                    
+                    if (result.status === 'ok') {
+                        showToast('发布成功！');
+                        closeModal();
+                        loadMessages();
+                    } else {
+                        showToast('发布失败', 'error');
+                    }
+                }
+            } catch (error) {
+                showToast(editId ? '保存失败，请检查后端服务' : '提交失败，请检查后端服务', 'error');
+                console.error(editId ? '保存失败:' : '提交失败:', error);
+            }
+        }
+
+        // 删除留言
+        async function deleteMessage(id) {
+            if (!confirm('确定要删除这条留言吗？')) return;
+            
+            try {
+                // v2: 修复删除接口路径
+                const response = await fetch(`${API_URL}/delete/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'ok') {
+                    showToast('删除成功！');
+                    loadMessages();
+                } else {
+                    showToast('删除失败', 'error');
+                }
+            } catch (error) {
+                showToast('删除失败', 'error');
+                console.error('删除失败:', error);
+            }
+        }
+
+        // 回车提交
+        document.getElementById('contentInput')?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                submitMessage();
+            }
+        });
+
+        // 初始加载
+        loadMessages();
+    </script>
+</body>
+</html>
