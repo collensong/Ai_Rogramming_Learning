@@ -16,7 +16,7 @@ MODELS = {
 
 # 优化参数
 N_THREADS = 8   # 根据 CPU 调整，8 线程通常足够
-N_CTX = 1024    # 降低以节省内存，可提升至 2048 如果需要
+N_CTX = 2048    # 使用模型最大上下文长度
 RESET = "\033[0m"
 
 def test_model(name, config, question):

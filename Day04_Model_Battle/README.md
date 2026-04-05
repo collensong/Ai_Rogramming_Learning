@@ -139,7 +139,7 @@ answer = response['choices'][0]['message']['content']
 llm = Llama(
     model_path="...",
     n_threads=8,    # 根据 CPU 核心数调整
-    n_ctx=1024,     # 1024 足够日常对话，可节省内存
+    n_ctx=2048,     # 使用模型最大上下文长度
 )
 ```
 

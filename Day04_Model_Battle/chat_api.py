@@ -24,7 +24,7 @@ import time
 MODEL_PATH = "/home/song/ai/edge_ai/tinyllama-1.1b-chat-q4.gguf"
 DEFAULT_CONFIG = {
     "n_threads": 8,
-    "n_ctx": 1024,
+    "n_ctx": 2048,  # 使用模型最大上下文长度
     "verbose": False
 }
 GENERATION_CONFIG = {
