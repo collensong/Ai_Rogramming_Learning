@@ -38,21 +38,17 @@ pip install llama-cpp-python
 
 ## 📦 模型准备
 
-从 HuggingFace 或 ModelScope 下载以下 GGUF 格式模型：
+本版本专注优化 **TinyLlama-1.1B** 单模型（轻量级部署）：
 
 | 模型 | 参数量 | 文件大小 | 特点 |
 |------|--------|----------|------|
-| Qwen2.5-0.5B-Instruct | 0.5B | ~400MB | 极速推理，中文友好 |
-| Qwen2.5-1.5B-Instruct | 1.5B | ~1GB | 平衡性能与质量 |
-| Phi-2 | 2.7B | ~1.7GB | 微软出品，英文能力强 |
-| TinyLlama-1.1B | 1.1B | ~600MB | 小巧精悍 |
+| TinyLlama-1.1B | 1.1B | ~638MB | 小巧精悍，速度快 |
 
-模型存放路径（默认）：
+> 💡 **提示**: 如需对比多模型，可下载其他 GGUF 模型并修改 `MODELS` 配置
+
+模型存放路径：
 ```
 /home/song/ai/edge_ai/
-├── qwen2.5-0.5b-instruct-q4_k_m.gguf
-├── qwen2.5-1.5b-instruct-q4_k_m.gguf
-├── phi-2-q4.gguf
 └── tinyllama-1.1b-chat-q4.gguf
 ```
 
@@ -135,8 +131,17 @@ answer = response['choices'][0]['message']['content']
 ## 📝 学习笔记
 
 ### 1. 模型量化
-- GGUF 格式支持 4-bit 量化，大幅减少内存占用
+- GGUF 格式支持 4-bit 量化，大幅减少内存占用（638MB 即可运行 1.1B 模型）
 - 量化后模型质量会有一定损失，但对于简单任务影响较小
+
+### 2. 参数优化
+```python
+llm = Llama(
+    model_path="...",
+    n_threads=8,    # 根据 CPU 核心数调整
+    n_ctx=1024,     # 1024 足够日常对话，可节省内存
+)
+```
 
 ### 2. 推理优化
 - 增加 `n_threads` 可提升 CPU 利用率

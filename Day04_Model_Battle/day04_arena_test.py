@@ -24,32 +24,21 @@ from datetime import datetime
 
 # ============== 配置区域 ==============
 
-# 模型配置
+# 模型配置 - 专注优化 TinyLlama（单模型）
 MODELS = {
-    "Qwen0.5B": {
-        "path": "/home/song/ai/edge_ai/qwen2.5-0.5b-instruct-q4_k_m.gguf",
-        "desc": "极速 (62 tok/s)",
-        "color": "\033[32m",  # 绿色
-        "params": "0.5B"
-    },
-    "Qwen1.5B": {
-        "path": "/home/song/ai/edge_ai/qwen2.5-1.5b-instruct-q4_k_m.gguf",
-        "desc": "平衡 (25 tok/s)",
-        "color": "\033[34m",  # 蓝色
-        "params": "1.5B"
-    },
-    "Phi-2": {
-        "path": "/home/song/ai/edge_ai/phi-2-q4.gguf",
-        "desc": "微软出品 (英文强)",
-        "color": "\033[33m",  # 黄色
-        "params": "2.7B"
-    },
     "TinyLlama": {
         "path": "/home/song/ai/edge_ai/tinyllama-1.1b-chat-q4.gguf",
-        "desc": "小巧 (1.1B)",
+        "desc": "小巧精悍 (1.1B)",
         "color": "\033[35m",  # 紫色
         "params": "1.1B"
     }
+}
+
+# 优化的模型参数
+MODEL_CONFIG = {
+    "n_threads": 8,      # 根据 CPU 核心数调整，8 线程通常足够
+    "n_ctx": 1024,       # 降低上下文长度以节省内存（可提升至 2048 如果需要）
+    "verbose": False
 }
 
 RESET = "\033[0m"
@@ -82,11 +71,11 @@ def check_model_exists(path):
     return os.path.exists(path)
 
 def load_model(config, verbose=False):
-    """加载模型"""
+    """加载模型 - 使用优化参数"""
     return Llama(
         model_path=config["path"],
-        n_threads=16,
-        n_ctx=2048,
+        n_threads=MODEL_CONFIG["n_threads"],
+        n_ctx=MODEL_CONFIG["n_ctx"],
         verbose=verbose
     )
 
@@ -207,23 +196,11 @@ def interactive_mode():
     print("🎮 Day04 模型竞技场 - 交互式模式")
     print("=" * 70)
     print()
-    print("可用模型:")
-    for i, (name, config) in enumerate(MODELS.items(), 1):
-        print(f"  {i}. {name} - {config['desc']}")
+    print("当前模型:")
+    for name, config in MODELS.items():
+        print(f"  🤖 {name} - {config['desc']}")
+    print(f"  线程数: {MODEL_CONFIG['n_threads']} | 上下文: {MODEL_CONFIG['n_ctx']} tokens")
     print()
-    
-    # 选择模型
-    while True:
-        choice = input("选择模型 (1-4, 或输入 'all' 测试全部): ").strip()
-        if choice.lower() == 'all':
-            selected_models = list(MODELS.keys())
-            break
-        try:
-            idx = int(choice) - 1
-            selected_models = [list(MODELS.keys())[idx]]
-            break
-        except (ValueError, IndexError):
-            print("无效选择，请重试")
     
     # 输入问题
     print()

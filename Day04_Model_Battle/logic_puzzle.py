@@ -33,12 +33,14 @@ print()
 print("=" * 60)
 print("现在测试各个模型的回答...\n")
 
+# 专注 TinyLlama 单模型优化
 MODELS = {
-    "Qwen0.5B": "/home/song/ai/edge_ai/qwen2.5-0.5b-instruct-q4_k_m.gguf",
-    "Qwen1.5B": "/home/song/ai/edge_ai/qwen2.5-1.5b-instruct-q4_k_m.gguf",
-    "Phi-2": "/home/song/ai/edge_ai/phi-2-q4.gguf",
     "TinyLlama": "/home/song/ai/edge_ai/tinyllama-1.1b-chat-q4.gguf"
 }
+
+# 优化参数
+N_THREADS = 8   # 8 线程平衡速度与 CPU 占用
+N_CTX = 1024    # 1024 上下文足够逻辑题，可节省内存
 
 QUESTION = "逻辑题：如果我昨天是明天，那么今天就是周五。请问今天实际上是周几？请详细说明推理过程。"
 
@@ -51,8 +53,8 @@ for name, path in MODELS.items():
     try:
         llm = Llama(
             model_path=path,
-            n_threads=16,
-            n_ctx=2048,
+            n_threads=N_THREADS,
+            n_ctx=N_CTX,
             verbose=False
         )
         

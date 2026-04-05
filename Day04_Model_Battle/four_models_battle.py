@@ -5,29 +5,18 @@
 from llama_cpp import Llama
 import time
 
-# 模型配置（你的实际路径）
+# 模型配置 - 专注 TinyLlama 单模型优化
 MODELS = {
-    "Qwen0.5B": {
-        "path": "/home/song/ai/edge_ai/qwen2.5-0.5b-instruct-q4_k_m.gguf",
-        "desc": "极速 (62 tok/s)",
-        "color": "\033[32m"  # 绿色
-    },
-    "Qwen1.5B": {
-        "path": "/home/song/ai/edge_ai/qwen2.5-1.5b-instruct-q4_k_m.gguf",
-        "desc": "平衡 (25 tok/s)",
-        "color": "\033[34m"  # 蓝色
-    },
-    "Phi-2": {
-        "path": "/home/song/ai/edge_ai/phi-2-q4.gguf",
-        "desc": "微软出品 (英文强)",
-        "color": "\033[33m"  # 黄色
-    },
     "TinyLlama": {
         "path": "/home/song/ai/edge_ai/tinyllama-1.1b-chat-q4.gguf",
-        "desc": "小巧 (1.1B)",
+        "desc": "小巧精悍 (1.1B)",
         "color": "\033[35m"  # 紫色
     }
 }
+
+# 优化参数
+N_THREADS = 8   # 根据 CPU 调整，8 线程通常足够
+N_CTX = 1024    # 降低以节省内存，可提升至 2048 如果需要
 RESET = "\033[0m"
 
 def test_model(name, config, question):
