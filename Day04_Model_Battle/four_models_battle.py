@@ -45,8 +45,10 @@ def test_model(name, config, question):
         t0 = time.time()
         response = llm.create_chat_completion(
             messages=[{"role": "user", "content": question}],
-            max_tokens=150,
-            temperature=0.7
+            max_tokens=512,              # 适当增加，给模型足够表达空间
+            temperature=0.6,             # 略降温度，提升稳定性
+            top_p=0.9,                   # nucleus sampling
+            stop=["</s>", "Human:", "Assistant:", "User:"]  # 停止词
         )
         gen_time = time.time() - t0
         

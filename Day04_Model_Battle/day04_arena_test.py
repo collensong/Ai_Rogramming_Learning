@@ -79,12 +79,14 @@ def load_model(config, verbose=False):
         verbose=verbose
     )
 
-def generate_response(llm, question, max_tokens=200, temperature=0.7):
-    """生成回复"""
+def generate_response(llm, question, max_tokens=512, temperature=0.6, top_p=0.9):
+    """生成回复 - 针对 TinyLlama 优化的参数"""
     response = llm.create_chat_completion(
         messages=[{"role": "user", "content": question}],
-        max_tokens=max_tokens,
-        temperature=temperature
+        max_tokens=max_tokens,           # 增加 token，小模型需要更多空间表达
+        temperature=temperature,         # 略降温度，提升稳定性
+        top_p=top_p,                     # nucleus sampling，避免低质量 token
+        stop=["</s>", "Human:", "Assistant:", "User:"]  # 停止词，防止胡言乱语
     )
     return response['choices'][0]['message']['content']
 

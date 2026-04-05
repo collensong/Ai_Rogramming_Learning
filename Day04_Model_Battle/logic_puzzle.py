@@ -60,8 +60,10 @@ for name, path in MODELS.items():
         
         response = llm.create_chat_completion(
             messages=[{"role": "user", "content": QUESTION}],
-            max_tokens=300,
-            temperature=0.5
+            max_tokens=512,              # 增加 token，逻辑题需要详细推理
+            temperature=0.5,             # 较低温度，逻辑题需要确定性
+            top_p=0.9,                   # nucleus sampling
+            stop=["</s>", "Human:", "Assistant:", "User:"]  # 停止词
         )
         
         answer = response['choices'][0]['message']['content']
