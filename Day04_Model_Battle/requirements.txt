@@ -1,0 +1,13 @@
+# Day04 模型竞技场 - 依赖列表
+
+# 核心依赖
+llama-cpp-python>=0.2.0
+
+# 可选依赖（用于高级功能）
+numpy>=1.24.0
+pandas>=2.0.0
+matplotlib>=3.7.0
+
+# 开发依赖
+pytest>=7.0.0
+black>=23.0.0
