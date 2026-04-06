@@ -1,0 +1,19 @@
+# AI综合能力测试框架依赖
+
+# 核心依赖
+numpy>=1.20.0
+
+# 本地模型支持
+torch>=2.0.0
+transformers>=4.30.0
+accelerate>=0.20.0
+
+# API 支持
+openai>=1.0.0
+
+# 可选依赖
+# sentencepiece>=0.1.99  # 某些模型需要
+# protobuf>=3.20.0       # 某些模型需要
+
+# 报告生成（可选）
+# markdown>=3.4.0

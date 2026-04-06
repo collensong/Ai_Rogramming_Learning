@@ -11,6 +11,8 @@
 | [Day 01](./Day01_Fullstack) | 全栈留言板 | FastAPI + HTML/JS | 前后端分离、RESTful API |
 | [Day 02](./Day02_Amallest_Aoice_Assistant) | AI 语音助手 | FastAPI + 百度 ASR/TTS + DeepSeek | 语音交互、AI 集成 |
 | [Day 03](./Day03_Graph_RAG) | Graph RAG 知识图谱 | Neo4j + Kimi API | 知识图谱、RAG 增强 |
+| [Day 04](./Day04_Model_Battle) | 模型竞技场 | llama.cpp + GPU 推理 | 模型量化、性能评测 |
+| [Day 05](./Day05_My_Gpu_Icrying) | AI 综合能力测试框架 | PyTorch + Transformers | 自动化测试、模型评估 |
 
 ---
 
@@ -78,11 +80,47 @@ python graph_rag_kimi.py
 
 ---
 
+### Day 04 - 模型竞技场
+
+本地 LLM 对比测试平台，使用 llama.cpp 进行模型量化推理。
+
+```bash
+cd Day04_Model_Battle
+python -m venv venv
+source venv/bin/activate
+pip install torch transformers accelerate
+
+# 运行模型对比测试
+python day04_arena_test.py
+```
+
+**功能特性**: 🏆 多模型对比 → 📊 性能评测 → 🎯 最优选型
+
+---
+
+### Day 05 - AI 综合能力测试框架
+
+完整的 AI 模型能力评估系统，涵盖逻辑、语言、数学、常识等维度。
+
+```bash
+cd Day05_My_Gpu_Icrying
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# 快速测试
+python quickstart.py
+```
+
+**功能特性**: 🧪 综合评测 → 📈 能力分析 → 📋 报告生成
+
+---
+
 ## 📊 学习路线图
 
 ```
-Day 01 ──→ Day 02 ──→ Day 03 ──→ ...
-全栈基础   AI 集成    知识图谱    持续学习
+Day 01 ──→ Day 02 ──→ Day 03 ──→ Day 04 ──→ Day 05 ──→ ...
+全栈基础   AI 集成    知识图谱    模型评测    测试框架    持续学习
 ```
 
 ### 技能树
@@ -91,6 +129,8 @@ Day 01 ──→ Day 02 ──→ Day 03 ──→ ...
 - ✅ AI 集成 (LLM API、语音处理)
 - ✅ 数据存储 (图数据库 Neo4j)
 - ✅ 工程实践 (虚拟环境、Git、环境变量)
+- ✅ 模型评测 (本地部署、量化推理)
+- ✅ 测试框架 (自动化评估、报告生成)
 - ⬜ 向量数据库 (Milvus / Pinecone)
 - ⬜ Agent 开发 (LangChain / AutoGPT)
 
@@ -103,6 +143,8 @@ Day 01 ──→ Day 02 ──→ Day 03 ──→ ...
 | Day 01 | 全栈基础 | 掌握 FastAPI 框架，理解前后端分离架构 |
 | Day 02 | AI 集成 | 打通语音交互全流程，学会 API 集成与环境管理 |
 | Day 03 | 知识图谱 | 学习 Neo4j 图数据库，理解 Graph RAG 架构 |
+| Day 04 | 模型评测 | 了解模型量化原理，掌握本地 LLM 部署与对比测试 |
+| Day 05 | 测试框架 | 构建自动化评测系统，深入理解模型能力边界 |
 
 ---
 
